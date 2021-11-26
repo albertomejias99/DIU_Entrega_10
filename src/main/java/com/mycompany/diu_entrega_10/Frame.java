@@ -5,14 +5,27 @@
  */
 package com.mycompany.diu_entrega_10;
 
-import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.zip.*;
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingWorker;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
@@ -24,6 +37,60 @@ public class Frame extends javax.swing.JFrame {
     DefaultListModel filesModel = new DefaultListModel();
     JFileChooser fc = new JFileChooser();
     FileNameExtensionFilter filtro = null;
+    List<String> files = new ArrayList<String>();
+    List<File> list = new ArrayList<File>();
+    JProgressBar progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
+    JDialog dialog;
+
+    private class Compress extends SwingWorker<Void, Void> {
+
+        @Override
+        protected Void doInBackground() throws Exception {
+            try {
+                // Objeto para referenciar a los archivos que queremos comprimir
+                BufferedInputStream origin = null;
+                // Objeto para referenciar el archivo zip de salida
+                FileOutputStream dest = new FileOutputStream(fc.getSelectedFile() + ".zip");
+                ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
+                int BUFFER_SIZE = 256;
+                // Buffer de transferencia para almacenar datos a comprimir
+                byte[] data = new byte[BUFFER_SIZE];
+
+                Iterator i = files.iterator();
+                System.out.println(files.size());
+                double j = 0;
+                while (i.hasNext()) {
+                    String filename = (String) i.next();
+                    FileInputStream fi = new FileInputStream(filename);
+                    origin = new BufferedInputStream(fi, BUFFER_SIZE);
+                    ZipEntry entry = new ZipEntry(filename);
+                    out.putNextEntry(entry);
+                    // Leemos datos desde el archivo origen y se envían al archivo destino
+                    int count;
+                    while ((count = origin.read(data, 0, BUFFER_SIZE)) != -1) {
+                        out.write(data, 0, count);
+                    }
+                    double a = (j / (double) files.size()) * 100;
+                    progressBar.setValue((int) a);
+                    j++;
+                    Thread.sleep(500);
+                    // Cerramos el archivo origen, ya enviado a comprimir
+                    origin.close();
+                }
+                // Cerramos el archivo zip
+                out.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void done() {
+            dialog.dispose();
+        }
+        
+    }
 
     public Frame() {
         initComponents();
@@ -143,12 +210,20 @@ public class Frame extends javax.swing.JFrame {
     private void selectFolderBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectFolderBtnActionPerformed
         filesList.removeAll();
         filesModel.removeAllElements();
+        list.clear();
+        files.clear();
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fc.setAcceptAllFileFilterUsed(false);
         int op = fc.showOpenDialog(null);
         if (op == JFileChooser.APPROVE_OPTION) {
             File fichero = fc.getSelectedFile();
-            System.out.println(fichero.getName());
+            list = Arrays.asList(fichero.listFiles());
+            List<String> listNames = new ArrayList<>();
+            for (File file : list) {
+                listNames.add(file.getName());
+            }
+            filesModel.addAll(listNames);
+            filesList.setModel(filesModel);
         }
     }//GEN-LAST:event_selectFolderBtnActionPerformed
 
@@ -157,7 +232,35 @@ public class Frame extends javax.swing.JFrame {
     }//GEN-LAST:event_multipleSelBtnActionPerformed
 
     private void zipFilesBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zipFilesBtnActionPerformed
-        // TODO add your handling code here:
+        int[] indices = filesList.getSelectedIndices();
+        if (indices.length > 0) {
+            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            fc.setAcceptAllFileFilterUsed(false);
+            int op = fc.showSaveDialog(null);
+            if (op == JFileChooser.APPROVE_OPTION) {
+                Compress zip = new Compress();
+                for (int indice : indices) {
+                    System.out.println(list.get(indice));
+                    files.add(list.get(indice).getAbsolutePath());
+                }
+                zip.execute();
+                dialog = new JDialog();
+                dialog.setLayout(new FlowLayout(FlowLayout.LEFT));
+                dialog.add(progressBar);
+                JButton cancelBtn = new JButton("Cancel");
+                cancelBtn.addActionListener(new ActionListener(){
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        zip.cancel(true);
+                    }                    
+                });
+                dialog.add(cancelBtn);
+                dialog.setSize(300, 100);
+                dialog.setVisible(true);
+            }
+        } else {
+            JOptionPane.showMessageDialog(rootPane, "Debes seleccionar primero un archivo", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_zipFilesBtnActionPerformed
 
     private void contSelBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_contSelBtnActionPerformed
@@ -182,16 +285,21 @@ public class Frame extends javax.swing.JFrame {
                 if ("Nimbus".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
+
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Frame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Frame.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Frame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Frame.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Frame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Frame.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Frame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Frame.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
