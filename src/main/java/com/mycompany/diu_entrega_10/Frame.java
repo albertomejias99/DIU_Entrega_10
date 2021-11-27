@@ -58,7 +58,6 @@ public class Frame extends javax.swing.JFrame {
                 byte[] data = new byte[BUFFER_SIZE];
 
                 Iterator i = files.iterator();
-                System.out.println(files.size());
                 double j = 0;
                 while (i.hasNext()) {
                     String filename = (String) i.next();
@@ -74,9 +73,7 @@ public class Frame extends javax.swing.JFrame {
                     double a = (j / (double) files.size()) * 100;
                     progressBar.setValue((int) a);
                     j++;
-
                     Thread.sleep(500);
-
                     // Cerramos el archivo origen, ya enviado a comprimir
                     origin.close();
                 }
@@ -245,7 +242,6 @@ public class Frame extends javax.swing.JFrame {
             if (op == JFileChooser.APPROVE_OPTION) {
                 Compress zip = new Compress();
                 for (int indice : indices) {
-                    System.out.println(list.get(indice));
                     files.add(list.get(indice).getAbsolutePath());
                 }
                 zip.execute();
