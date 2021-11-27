@@ -40,6 +40,7 @@ public class Frame extends javax.swing.JFrame {
     List<String> files = new ArrayList<String>();
     List<File> list = new ArrayList<File>();
     List<String> listNames = new ArrayList<>();
+    List<String> names = new ArrayList<>();
     JProgressBar progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
     JDialog dialog;
 
@@ -63,7 +64,7 @@ public class Frame extends javax.swing.JFrame {
                     String filename = (String) i.next();
                     FileInputStream fi = new FileInputStream(filename);
                     origin = new BufferedInputStream(fi, BUFFER_SIZE);
-                    ZipEntry entry = new ZipEntry(listNames.get((int) j));
+                    ZipEntry entry = new ZipEntry(names.get((int) j));
                     out.putNextEntry(entry);
                     // Leemos datos desde el archivo origen y se envían al archivo destino
                     int count;
@@ -89,6 +90,8 @@ public class Frame extends javax.swing.JFrame {
 
         @Override
         protected void done() {
+            files.clear();
+            names.clear();
             dialog.dispose();
         }
 
@@ -220,7 +223,7 @@ public class Frame extends javax.swing.JFrame {
         int op = fc.showOpenDialog(null);
         if (op == JFileChooser.APPROVE_OPTION) {
             File fichero = fc.getSelectedFile();
-            list = Arrays.asList(fichero.listFiles());
+            list = new ArrayList<>(Arrays.asList(fichero.listFiles()));
             for (File file : list) {
                 listNames.add(file.getName());
             }
@@ -243,6 +246,7 @@ public class Frame extends javax.swing.JFrame {
                 Compress zip = new Compress();
                 for (int indice : indices) {
                     files.add(list.get(indice).getAbsolutePath());
+                    names.add(list.get(indice).getName());
                 }
                 zip.execute();
                 dialog = new JDialog();
