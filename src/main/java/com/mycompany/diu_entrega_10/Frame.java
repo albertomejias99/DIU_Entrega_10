@@ -39,6 +39,7 @@ public class Frame extends javax.swing.JFrame {
     FileNameExtensionFilter filtro = null;
     List<String> files = new ArrayList<String>();
     List<File> list = new ArrayList<File>();
+    List<String> listNames = new ArrayList<>();
     JProgressBar progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
     JDialog dialog;
 
@@ -63,7 +64,7 @@ public class Frame extends javax.swing.JFrame {
                     String filename = (String) i.next();
                     FileInputStream fi = new FileInputStream(filename);
                     origin = new BufferedInputStream(fi, BUFFER_SIZE);
-                    ZipEntry entry = new ZipEntry(filename);
+                    ZipEntry entry = new ZipEntry(listNames.get((int) j));
                     out.putNextEntry(entry);
                     // Leemos datos desde el archivo origen y se envían al archivo destino
                     int count;
@@ -216,13 +217,13 @@ public class Frame extends javax.swing.JFrame {
         filesModel.removeAllElements();
         list.clear();
         files.clear();
+        listNames.clear();
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fc.setAcceptAllFileFilterUsed(false);
         int op = fc.showOpenDialog(null);
         if (op == JFileChooser.APPROVE_OPTION) {
             File fichero = fc.getSelectedFile();
             list = Arrays.asList(fichero.listFiles());
-            List<String> listNames = new ArrayList<>();
             for (File file : list) {
                 listNames.add(file.getName());
             }
