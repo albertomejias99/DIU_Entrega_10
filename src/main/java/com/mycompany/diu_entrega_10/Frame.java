@@ -73,12 +73,16 @@ public class Frame extends javax.swing.JFrame {
                     double a = (j / (double) files.size()) * 100;
                     progressBar.setValue((int) a);
                     j++;
+
                     Thread.sleep(500);
+
                     // Cerramos el archivo origen, ya enviado a comprimir
                     origin.close();
                 }
                 // Cerramos el archivo zip
                 out.close();
+            } catch (InterruptedException e) {
+                JOptionPane.showMessageDialog(rootPane, "Compresión cancelada", "Compresión cancelada", JOptionPane.ERROR_MESSAGE);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -89,7 +93,7 @@ public class Frame extends javax.swing.JFrame {
         protected void done() {
             dialog.dispose();
         }
-        
+
     }
 
     public Frame() {
@@ -248,11 +252,11 @@ public class Frame extends javax.swing.JFrame {
                 dialog.setLayout(new FlowLayout(FlowLayout.LEFT));
                 dialog.add(progressBar);
                 JButton cancelBtn = new JButton("Cancel");
-                cancelBtn.addActionListener(new ActionListener(){
+                cancelBtn.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         zip.cancel(true);
-                    }                    
+                    }
                 });
                 dialog.add(cancelBtn);
                 dialog.setSize(300, 100);
